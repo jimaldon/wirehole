@@ -51,8 +51,22 @@ services:
       private_network:
         ipv4_address: 10.2.0.3
 
+  dhcphelper:
+    build: ./dhcp-helper
+    container_name: dhcphelper
+    restart: unless-stopped
+    command: -s 10.2.0.100
+      #ports:
+      #- "67:67/udp"
+    cap_add:
+      - NET_ADMIN
+    network_mode: "host"
+      #networks:
+      #private_network:
+      #ipv4_address: 10.2.0.150 
+
   pihole:
-    depends_on: [unbound]
+    depends_on: [unbound, dhcphelper]
     container_name: pihole
     image: jacklul/pihole:latest
     restart: unless-stopped
@@ -66,6 +80,7 @@ services:
       ServerIP: 10.2.0.100 # Internal IP of pihole
       DNS1: 10.2.0.200#53 # Unbound IP
       DNS2: 10.2.0.200#53 # If we don't specify two, it will auto pick google.
+      DNSMASQ_LISTENING: all
     # Volumes store your data between container upgrades
     volumes:
       - "./etc-pihole/:/etc/pihole/"
